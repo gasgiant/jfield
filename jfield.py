@@ -3,7 +3,7 @@ import numpy as _np
 import internal_field as internal_field_cython
 import current_disk as current_disk_cython
 
-import params_holder as params
+import params
 import transform
 
 _ph = params
@@ -56,44 +56,33 @@ def PCD_field(rho, phi, z, x):
 
     '''
     res = current_disk_cython.PCD_field_1darray(
-        rho, z, _ph.PCD.I0, _ph.PCD.D, _ph.PCD.Rin, _ph.PCD.Rout, _ph.PCD.R1, _ph.PCD.R2, _z_cs(rho, phi, x), _dzcs_drho(rho, phi, x))
+        rho, z, _ph.PCD.I0, _ph.PCD.D, _ph.PCD.Rin, _ph.PCD.Rout, _ph.PCD.R1, _ph.PCD.R2, z_cs(rho, phi, x), dzcs_drho(rho, phi, x))
     return _np.array([res[0], _np.zeros(res.shape[1]), res[1]])
 
 
-def SIII2M(vec):
-    '''Converts vectors from System III (1965) to magnetic equatorial system
-        
-    Note: vectors should be in cartesian coordinates
-    '''
-    return _np.dot(_ph.SIII2M_mat, vec)
-
-
-def M2SIII(vec):
-    '''Converts vectors from magnetic equatorial system to System III (1965)
-    
-    Note: vectors should be in cartesian coordinates
-    '''
-    return _np.dot(_ph.M2SIII_mat, vec)
-
-
-def _dzcs_drho(rho, phi, x):
-    tan = _np.tan(_ph.dipole_tilt)
-    return (tan * (_np.cosh(x / _ph.curvature.x0)) ** (-2) * _np.cos(phi - _delta(rho))
-            - rho * tan * _ph.curvature.x0 / x * _np.tanh(x / _ph.curvature.x0) * _np.sin(phi - _delta(
-                rho)) * _ph.curvature.omega_j / _ph.curvature.nu0 * _np.tanh(rho / _ph.curvature.rho0)
-            - tan * _np.cos(phi - _delta(rho)))
-
-
-def _z_cs(rho, phi, x):
-    return rho * _np.tan(_ph.dipole_tilt) * (_ph.curvature.x0 / x * _np.tanh(x / _ph.curvature.x0) * _np.cos(phi - _delta(rho))
-                                             - _np.cos(phi - _np.pi))
-
-
-def _delta(rho):
-    return _np.pi - _ph.curvature.omega_j * _ph.curvature.rho0 / _ph.curvature.nu0 * _np.log(_np.cosh(rho / _ph.curvature.rho0))
-
-
 def lines(starts, ds, N, B_func):
+    '''Calculates field lines of the field determined by callable B_func.
+
+    Parameters
+    ----------
+    starts : ndarray
+        Cartesian coordinates of the start points of lines
+    ds : 1-D array 
+        Spatial step of field line calculation for each line
+    N : int
+        Maximal number of seps
+    B_func : callable
+        Calculates cartesian components of the magnetic field. Input: cartesian coordinates 
+
+    Returns
+    -------
+    positions : ndarray 
+        cartesian coordinates of points on the field lines
+    
+    end_ind : ndarray
+        indices of end points of the lines in the array of positions 
+
+    '''
     positions = _np.zeros((3, N, starts.shape[1]))
     positions[:, 0, :] = starts
     end_ind = _np.zeros(starts.shape[1], dtype=_np.int)
@@ -110,6 +99,44 @@ def lines(starts, ds, N, B_func):
             break
 
     return (positions, end_ind)
+
+
+def SIII2M(vec):
+    '''Converts vectors from System III (1965) to magnetic equatorial system.
+        
+    Note: vectors should be in cartesian coordinates.
+    '''
+    return _np.dot(_ph.SIII2M_mat, vec)
+
+
+def M2SIII(vec):
+    '''Converts vectors from magnetic equatorial system to System III (1965).
+    
+    Note: vectors should be in cartesian coordinates
+    '''
+    return _np.dot(_ph.M2SIII_mat, vec)
+
+
+def dzcs_drho(rho, phi, x):
+    ''' Calculates partial derivative by rho of z_cs. '''
+    tan = _np.tan(_ph.dipole_tilt)
+    return (tan * (_np.cosh(x / _ph.curvature.x0)) ** (-2) * _np.cos(phi - _delta(rho))
+            - rho * tan * _ph.curvature.x0 / x * _np.tanh(x / _ph.curvature.x0) * _np.sin(phi - _delta(
+                rho)) * _ph.curvature.omega_j / _ph.curvature.nu0 * _np.tanh(rho / _ph.curvature.rho0)
+            - tan * _np.cos(phi - _delta(rho)))
+
+
+def z_cs(rho, phi, x):
+    ''' Calcualtes z coordinate of the current sheet center in magnetic coordinates.
+    
+    For more info see Khurana 1997 (https://doi.org/10.1029/97JA00563)
+    '''
+    return rho * _np.tan(_ph.dipole_tilt) * (_ph.curvature.x0 / x * _np.tanh(x / _ph.curvature.x0) * _np.cos(phi - _delta(rho))
+                                             - _np.cos(phi - _np.pi))
+
+
+def _delta(rho):
+    return _np.pi - _ph.curvature.omega_j * _ph.curvature.rho0 / _ph.curvature.nu0 * _np.log(_np.cosh(rho / _ph.curvature.rho0))
 
 
 def _totalB(M_cart):

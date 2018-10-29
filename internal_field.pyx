@@ -7,7 +7,7 @@ cdef extern from "math.h":
      double cos(double arg)
 
 @cython.boundscheck(False)  # Deactivate bounds checking
-@cython.wraparound(False) # Deactivate negative indexing.
+@cython.wraparound(False) # Deactivate negative indexing
 @cython.cdivision(True) 
 
 cpdef internal_field(double r, double theta, double phi, double[:,:] g, double[:,:] h, double[:,:] sch):

@@ -12,21 +12,19 @@ cdef extern from "math.h":
     double cosh(double x)
     double sinh(double x)
 
-@cython.boundscheck(False)  # Deactivate bounds checking
-@cython.wraparound(False) # Deactivate negative indexing.
 
-def _get_clambda2_interpolation():
-    def integrand(x):
-        return jv(1, x) / x
+cpdef _get_clambda2_interpolation():
+    ''' Calculates Clambda2 interpolation values '''
 
-    NN = 400
-    lambd = np.linspace(1e-9, 40, NN)
+    N = 400
+    lambd = np.linspace(1e-9, 40, N)
     n_zeros = 100
     kk = 16
 
-    yint = np.zeros(NN)
+    yint = np.zeros(N)
+    cdef int i
 
-    for i in range(NN):
+    for i in range(N):
         bessel_zeros = jn_zeros(1, n_zeros - 1)
         mask = np.where(lambd[i] < bessel_zeros)
         args = np.append(lambd[i], bessel_zeros[mask])
@@ -35,10 +33,11 @@ def _get_clambda2_interpolation():
         repeated1 = np.repeat(args[0:n1 - 1], kk)
         repeated2 = np.repeat(args[1:n1], kk)
         x = repeated1 + (repeated2 - repeated1) * lerp
-        y = integrand(x)
+        y = jv(1, x) / x
         yint[i] = integrate.simps(y, x)
     return (yint, lambd)
 
+# initializing
 clambda2_y, clambda2_x = _get_clambda2_interpolation()
 j0_zeros = jn_zeros(0, 50)
 j1_zeros = jn_zeros(1, 50)
@@ -147,10 +146,10 @@ cpdef semi_infinite_disk(double rho, double z,
 
 
 cpdef get_zeros(double[:] zeros_rho, double[:] zeros_z, int n_zeros, double a, double rho, double[:] j0_zeros, double[:] j1_zeros):
-
-    # Integrals of the periodic functions are divided into a series of integrals 
-    # over intervals between zeros. 
-    # returns first n_zeros zeros for Brho and Bz integrands
+    ''' Returns first n zeros for Brho and Bz integrands. 
+    
+    Integrals of the periodic functions are divided into a series of integrals over intervals between zeros of integrands.
+    '''
     cdef double[:] bessel_zeros_rho = np.zeros(2 * n_zeros + 1)
     cdef double[:] bessel_zeros_z = np.zeros(2 * n_zeros + 1)
 
@@ -202,6 +201,7 @@ cdef double clambda1(double x, double a):
 
 
 cpdef double interpolate(double x, double[:] data_y, double[:] data_x):
+    ''' Interpolates a set of data with a piecewise linear function. '''
     cdef int ind
     cdef double x_range
     cdef Py_ssize_t size = data_y.shape[0]
@@ -216,6 +216,7 @@ cpdef double interpolate(double x, double[:] data_y, double[:] data_x):
     
 
 cpdef double simpson(int size, double[:] values, double h):
+    ''' Calculates integral by composite Simpson's rule. '''
     cdef double s = 0
     cdef int i
     s = 0
@@ -225,6 +226,7 @@ cpdef double simpson(int size, double[:] values, double h):
 
 
 cpdef quicksort(double[:] s_arr, int first, int last):
+    ''' Sorts an array of doubles by quicksort algorithm. '''
     cdef int left = first
     cdef int right = last
     cdef double middle = s_arr[(left + right) // 2]
