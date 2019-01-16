@@ -78,7 +78,7 @@ def coords_cyl2sph(cyl):
 
     r = _np.sqrt(rho ** 2 + z ** 2)
     theta = _np.arccos(z / r)
-    return _np.transpose(_np.array([r, theta, phi]))
+    return _np.array([r, theta, phi])
 
 
 def coords_sph2cart(sph):
@@ -90,7 +90,7 @@ def coords_sph2cart(sph):
     x = r * _np.sin(theta) * _np.cos(phi)
     y = r * _np.sin(theta) * _np.sin(phi)
     z = r * _np.cos(theta)
-    return _np.transpose(_np.array([x, y, z]))
+    return _np.array([x, y, z])
 
 
 def coords_sph2cyl(sph):
@@ -101,7 +101,7 @@ def coords_sph2cyl(sph):
 
     rho = r * _np.sin(theta)
     z = r * _np.cos(theta)
-    return _np.transpose(_np.array([rho, phi, z]))
+    return _np.array([rho, phi, z])
 
 
 # Transformations of vectors fields
