@@ -137,7 +137,7 @@ def set_pcd_params(I0=None, D=None, Rin=None, Rout=None, R1=None, R2=None):
         R1 = PCD.R1
     if R2 is None:
         R2 = PCD.R2
-    PCD = PCDParams(I0, D, Rin, Rout, R1, R1)
+    PCD = PCDParams(I0, D, Rin, Rout, R1, R2)
     
 
 
