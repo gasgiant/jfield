@@ -1,5 +1,5 @@
 # jfield
-A tool for Jupiter's magnetic field computation according to PCD model.
+A tool for Jupiter's magnetic field computation according to the PCD model.
 
 ## Installation
 jfield requires [numpy](http://www.numpy.org/), [scipy](https://www.scipy.org/) and [Cython](https://cython.org/).
